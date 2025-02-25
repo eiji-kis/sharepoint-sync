@@ -154,6 +154,12 @@ python sharepoint_sync.py reset_exclusions
 
 ---
 
+## 🧪 Tests
+
+To ensure the CLI works as expected, check out **tests/tests.md**, which contains a list of all performed tests and validations. ✅
+
+---
+
 ## 🛠️ Troubleshooting
 ⚠️ If an error occurs while reading `.docx` files, **ensure `python-docx` is installed.**
 ⚠️ **Check that both SharePoint directories exist before syncing.**
