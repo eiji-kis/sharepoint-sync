@@ -113,8 +113,8 @@ python sharepoint_sync.py exclude_file <file_name>
 ---
 
 ## 📝 Logging & Follow-Ups
-- 🔹 **All actions and skipped operations are logged.**
-- 🔹 **Follow-ups** for manual review are stored in `follow_up_tasks.md`. 📜
+- **All actions and skipped operations are logged.**
+- **Follow-ups** for manual review are stored in `follow_up_tasks.md`. 📜
 
 ---
 
