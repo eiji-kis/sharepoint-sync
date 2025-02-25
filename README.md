@@ -104,11 +104,11 @@ python sharepoint_sync.py exclude_file <file_name>
 ---
 
 ## ⚡ Features
-✨ **Profile Management** – Configure multiple SharePoint pairs for different clients.
-✨ **Diff Viewer** – Shows content differences in `.docx` files.
-✨ **Interactive Actions** – Prompt-based confirmations for moving or copying files.
-✨ **Exclusion Support** – Exclude specific files or directories from sync.
-✨ **Logging** – Colorized logging for better visibility. 🎨
+- **Profile Management** – Configure multiple SharePoint pairs for different clients.
+- **Diff Viewer** – Shows content differences in `.docx` files.
+- **Interactive Actions** – Prompt-based confirmations for moving or copying files.
+- **Exclusion Support** – Exclude specific files or directories from sync.
+- **Logging** – Colorized logging for better visibility. 🎨
 
 ---
 
