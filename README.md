@@ -49,6 +49,11 @@ Run the script using:
 python sharepoint_sync.py <command> [options]
 ```
 
+or, if you make the script executable:
+```sh
+./sharepoint_sync.py <command> [options]
+```
+
 ### 🔹 Available Commands
 
 #### 1️⃣ **Setup a Profile**
