@@ -28,6 +28,9 @@ pip install click python-docx
 ## 🚀 **Usage Guide**
 
 ### **1️⃣ Setting Up a Profile**
+
+> Before setting up a profile, make sure you have OneDrive installed and both SharePoints are avaliable locally on your machine
+
 A profile stores the paths for your **KIS SharePoint** and **Client SharePoint**.
 
 Run the following command and provide the required paths:
@@ -40,6 +43,15 @@ You’ll be asked:
 - **Client SharePoint directory** (e.g., `/Users/username/SharePoint/Client`)
 
 ### **2️⃣ Syncing Files**
+
+Before synchronizing two SharePoints, the files on your local should be up to date.
+
+To achieve this, hit the **Sync** button on SharePoint web to pull in changes others may have made to the documents:
+
+![alt text](/img/sync.png)
+
+> Wait for ~5 minutes so the files are synched to your local
+
 To sync files between SharePoints, run:
 ```sh
 python sharepoint_sync.py sync client_project_A
