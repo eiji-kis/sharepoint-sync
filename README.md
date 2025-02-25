@@ -1,48 +1,72 @@
-# SharePoint Sync CLI
 
-A command-line tool to manually **sync** files between two SharePoint directories:  
-- **KIS SharePoint** (internal)
-- **Client SharePoint** (external)
 
-It includes features such as:
+# 🚀 SharePoint Sync CLI
 
-✅ **Syncing missing or outdated files**  
-✅ **Checking for differences between docx files**  
-✅ **Skipping unchanged files**  
-✅ **Excluding specific files and directories from sync**  
+## 🌟 Overview
+**SharePoint Sync CLI** is a command-line tool for synchronizing files between two SharePoints (e.g., **KIS** and **Client SharePoints**). It provides powerful features such as:
 
-## 📌 **Installation**
+✅ Excluding specific files or directories
+✅ Detecting moved or updated files
+✅ Displaying diffs for **Word documents** (`.docx`)
+✅ Interactive copy/move operations
+✅ Managing **multiple profiles** for different SharePoints
 
-### **1️⃣ Clone the Repository**
+---
+
+## 🔧 Requirements
+Make sure you have the following installed before using the CLI:
+
+🔹 **Python 3**
+🔹 Required Python packages:
+  - `python-docx`
+  - `pyfiglet`
+  - `click`
+  - `colorlog`
+
+📌 **Install dependencies with:**
 ```sh
-git clone TODO
+pip install python-docx pyfiglet click colorlog
+```
+
+---
+
+## 📥 Installation
+Clone the repository and navigate to the project directory:
+```sh
+git clone https://github.com/eiji-kis/sharepoint-sync.git
 cd sharepoint-sync
 ```
-
-### **2️⃣ Install Dependencies**
-This script requires Python 3.7 or later. Install dependencies with:
+Make the script executable (optional):
 ```sh
-pip install click python-docx
+chmod +x sharepoint_sync.py
 ```
 
-## 🚀 **Usage Guide**
+---
 
-### **1️⃣ Setting Up a Profile**
+## 🛠️ Usage
+Run the script using:
+```sh
+python sharepoint_sync.py <command> [options]
+```
+
+### 🔹 Available Commands
+
+#### 1️⃣ **Setup a Profile**
 
 > Before setting up a profile, make sure you have OneDrive installed and both SharePoints are avaliable locally on your machine
 
-A profile stores the paths for your **KIS SharePoint** and **Client SharePoint**.
-
-Run the following command and provide the required paths:
+Before syncing files, **set up a profile**:
 ```sh
 python sharepoint_sync.py setup
 ```
-You’ll be asked:
-- **Profile name** (e.g., `client_project_A`)
-- **KIS SharePoint directory** (e.g., `/Users/username/SharePoint/KIS`)
-- **Client SharePoint directory** (e.g., `/Users/username/SharePoint/Client`)
+You will be prompted to enter:
+- 📌 **Profile name** (e.g., `client_name`)
+- 📌 **Root directory** of KIS SharePoint
+- 📌 **Root directory** of the Client SharePoint
 
-### **2️⃣ Syncing Files**
+This stores your profile configuration in `~/.sharepoint_sync_profiles.json`.
+
+#### 2️⃣ **Sync Files**
 
 Before synchronizing two SharePoints, the files on your local should be up to date.
 
@@ -50,82 +74,90 @@ To achieve this, hit the **Sync** button on SharePoint web to pull in changes ot
 
 ![alt text](/img/sync.png)
 
-> Wait for ~5 minutes so the files are synched to your local
-
-To sync files between SharePoints, run:
+To **sync files** between SharePoints:
 ```sh
-python sharepoint_sync.py sync client_project_A
+python sharepoint_sync.py sync <profile>
 ```
-This will:
-- **Compare files** in both SharePoint directories.
-- **Skip unchanged files** (same modification date).
-- **Show differences** for modified files.
-- **Prompt to copy** newer files from one directory to the other.
+✨ This will:
+- Identify **missing files** in each directory
+- Detect **moved or updated** files
+- **Prompt for interactive actions**
+- Display **diffs** for `.docx` files 📄
 
-If a file is missing in one directory, you'll be asked:
-```
-File missing in Client SharePoint: report.docx. Copy from KIS SharePoint? [y/N]
+#### 3️⃣ **Exclude Directories**
+To **exclude a directory** from the sync process:
+```sh
+python sharepoint_sync.py exclude_dir <dir_name>
 ```
 
-If a file is updated, you’ll see:
-```
-File exists in both locations:
-  KIS SharePoint last modified: 2025-02-01 14:30:00
-  Client SharePoint last modified: 2025-01-29 10:15:00
-Differences detected
-Copy newer version from KIS SharePoint to Client SharePoint? [y/N]
+#### 4️⃣ **Exclude Files**
+To **exclude a file** from the sync process:
+```sh
+python sharepoint_sync.py exclude_file <file_name>
 ```
 
 ---
 
-## ⚠️ **Excluding Files and Folders**
-
-### **1️⃣ Exclude a Specific File**
-To permanently ignore a file from syncing, add it to the ignore list:
-```sh
-python sharepoint_sync.py exclude-file .DS_Store
-```
-Now, any file named `.DS_Store` will be ignored.
-
-### **2️⃣ Exclude a Directory**
-To ignore an entire folder (and its subfolders), use:
-```sh
-python sharepoint_sync.py exclude-dir node_modules
-```
-Now, any folder named `node_modules` inside your SharePoints **will be skipped**.
+## ⚡ Features
+✨ **Profile Management** – Configure multiple SharePoint pairs for different clients.
+✨ **Diff Viewer** – Shows content differences in `.docx` files.
+✨ **Interactive Actions** – Prompt-based confirmations for moving or copying files.
+✨ **Exclusion Support** – Exclude specific files or directories from sync.
+✨ **Logging** – Colorized logging for better visibility. 🎨
 
 ---
 
-## 🔄 **Managing Exclusions**
-You can manually check or modify the **exclusion lists** in:
-```
-~/.sharepoint_sync_profiles.json
-```
-This JSON file stores:
-- **Profiles** (SharePoint paths)
-- **Excluded files**
-- **Excluded directories**
+## 📝 Logging & Follow-Ups
+🔹 **All actions and skipped operations are logged.**
+🔹 **Follow-ups** for manual review are stored in `follow_up_tasks.md`. 📜
 
-Example:
-```json
-{
-    "profiles": {
-        "client_project_A": {
-            "kis_dir": "/Users/username/SharePoint/KIS",
-            "client_dir": "/Users/username/SharePoint/Client"
-        }
-    },
-    "excluded_files": [".DS_Store"],
-    "excluded_dirs": ["controlled"]
-}
+---
+
+## 🎯 Example Workflow
+```sh
+# Set up a profile
+python sharepoint_sync.py setup
+
+# Sync files for a profile
+python sharepoint_sync.py sync client_name
+
+# Exclude a directory
+python sharepoint_sync.py exclude_dir "old_files"
+
+# Exclude a file
+python sharepoint_sync.py exclude_file "confidential.docx"
 ```
 
 ---
 
-## 🛠 **Troubleshooting**
-- **Error: `FileNotFoundError`**  
-  Ensure your SharePoint folders exist before running `sync`.  
-- **Error: `ValueError` (Path issue)**  
-  This happens if your files exist outside the expected directories. Run `exclude-file` or `exclude-dir` to ignore them.  
-- **Skipping files but you want them included?**  
-  Remove them from `excluded_files` or `excluded_dirs` in the JSON config.  
+## ⚡ Managing Excluded Dirs and Files
+To view all **excluded directories and files**, check your configuration file:
+```sh
+cat ~/.sharepoint_sync_profiles.json
+```
+
+To **remove a directory or file** from exclusion, edit the JSON file manually or override it using:
+```sh
+python sharepoint_sync.py exclude_dir <dir_name> --remove
+python sharepoint_sync.py exclude_file <file_name> --remove
+```
+
+You can also reset the exclusion list by running:
+```sh
+python sharepoint_sync.py reset_exclusions
+```
+
+---
+
+## 🛠️ Troubleshooting
+⚠️ If an error occurs while reading `.docx` files, **ensure `python-docx` is installed.**
+⚠️ **Check that both SharePoint directories exist before syncing.**
+⚠️ Run with `--verbosity debug` to see **detailed logs**:
+```sh
+python sharepoint_sync.py sync <profile> --verbosity debug
+```
+
+---
+
+## 🤝 Contributions
+Pull requests and feature suggestions are **welcome**! 🚀 Feel free to open an issue if you encounter any bugs or need improvements.
