@@ -22,6 +22,7 @@ Usage:
   - python sharepoint_sync.py exclude_file <file_name>
 """
 
+from datetime import datetime
 import os
 import shutil
 import filecmp
@@ -29,7 +30,6 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Tuple, Set
-
 import click
 import difflib
 import colorlog
@@ -42,6 +42,7 @@ from docx import Document
 CONFIG_FILE = Path.home() / ".sharepoint_sync_profiles.json"
 DEFAULT_EXCLUDED_FILES: List[str] = []
 DEFAULT_EXCLUDED_DIRS: List[str] = []
+FOLLOW_UP_FILE = Path("follow_up_tasks.md")
 
 # Create a logger
 logger = logging.getLogger("SharePoint Sync")
@@ -61,6 +62,18 @@ formatter = colorlog.ColoredFormatter(
     )
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+
+# ------------------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------------------
+def log_follow_up(task: str) -> None:
+    """
+    Appends a task/instruction to 'follow_up_tasks.md', timestamped.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with FOLLOW_UP_FILE.open("a", encoding="utf-8") as f:
+        f.write(f"### {timestamp}\n")
+        f.write(task.strip() + "\n\n")
 
 # ------------------------------------------------------------------------------
 # Data Structures
@@ -352,6 +365,13 @@ def sync(profile: str) -> None:
             if click.confirm(f"Copy {relative_path} from KIS to {profile}?"):
                 os.makedirs(target.parent, exist_ok=True)
                 shutil.copy2(origin, target)
+            else:
+                log_follow_up(
+                    f"You chose NOT to copy '{relative_path}' from KIS to {profile}.\n"
+                    f"Please manually check:\n"
+                    f" - KIS path: {origin}\n"
+                    f" - {profile} path: {target}\n"
+                )
 
     # Handle files that exist only in Client -> create on KIS
     if to_be_created_kis:
@@ -363,6 +383,14 @@ def sync(profile: str) -> None:
             if click.confirm(f"Copy {relative_path} from {profile} to KIS?"):
                 os.makedirs(target.parent, exist_ok=True)
                 shutil.copy2(origin, target)
+            else:
+                # User chose NO, so log a follow-up task
+                log_follow_up(
+                    f"You chose NOT to copy '{relative_path}' from {profile} to KIS.\n"
+                    f"Please manually check:\n"
+                    f" - {profile} path: {origin}\n"
+                    f" - KIS path: {target}\n"
+                )
 
     # Handle moved files
     if to_be_moved:
@@ -377,48 +405,62 @@ def sync(profile: str) -> None:
             if (
                 kis_abs_path.exists()
                 and client_abs_path.exists()
-                and filecmp.cmp(kis_abs_path, client_abs_path, shallow=False)
             ):
-                logger.debug("File exists in both locations and they are identical.")
+                
                 # Choose the "latest" by creation time to keep the directory structure
                 if kis_abs_path.stat().st_ctime > client_abs_path.stat().st_ctime:
                     latest_abs = kis_abs_path
+                    outdated_abs = client_abs_path
                     latest_sharepoint = "KIS"
                     outdated_sharepoint = profile
                     outdated_rel_path = client_rel_path
                     latest_rel_path = kis_rel_path
                 else:
                     latest_abs = client_abs_path
+                    outdated_abs = kis_abs_path
                     latest_sharepoint = profile
                     outdated_sharepoint = "KIS"
                     outdated_rel_path = kis_rel_path
                     latest_rel_path = client_rel_path
 
-                logger.info(
+                if (filecmp.cmp(kis_abs_path, client_abs_path, shallow=False)):
+                    logger.debug("File exists in both locations and they are identical.")
+                    logger.info(
                     f"The file '{file_name}' was moved on {latest_sharepoint} "
                     f"(file content is the same in both)."
+                    )
+                else:
+                    # If they are not identical, that suggests a conflict or partial move scenario
+                    logger.warning(
+                        f"Potentially conflicting move for '{file_name}'. "
+                        "Files differ and were moved. Proceed with caution."
+                    )
+                    if latest_rel_path.endswith(".docx"):
+                        show_file_diff(outdated_abs, latest_abs)
+
+                
+                destination_dir = (
+                    sync_profile.client_dir / latest_rel_path
+                ).parent if outdated_sharepoint == profile else (
+                    sync_profile.kis_dir / latest_rel_path
+                ).parent
+
+                source_path = (
+                    sync_profile.client_dir / outdated_rel_path
+                ) if outdated_sharepoint == profile else (
+                    sync_profile.kis_dir / outdated_rel_path
                 )
+
+                destination_path = (
+                    sync_profile.client_dir / latest_rel_path
+                ) if outdated_sharepoint == profile else (
+                    sync_profile.kis_dir / latest_rel_path
+                )        
+
                 if click.confirm(
                     f"Move {file_name} on {outdated_sharepoint} from '/{outdated_rel_path}' "
                     f"to '/{latest_rel_path}' to match {latest_sharepoint}?"
                 ):
-                    destination_dir = (
-                        sync_profile.client_dir / latest_rel_path
-                    ).parent if outdated_sharepoint == profile else (
-                        sync_profile.kis_dir / latest_rel_path
-                    ).parent
-
-                    source_path = (
-                        sync_profile.client_dir / outdated_rel_path
-                    ) if outdated_sharepoint == profile else (
-                        sync_profile.kis_dir / outdated_rel_path
-                    )
-
-                    destination_path = (
-                        sync_profile.client_dir / latest_rel_path
-                    ) if outdated_sharepoint == profile else (
-                        sync_profile.kis_dir / latest_rel_path
-                    )
 
                     try:
                         os.makedirs(destination_dir, exist_ok=True)
@@ -430,12 +472,15 @@ def sync(profile: str) -> None:
                         logger.error(f"Move failed: Permission denied.")
                     except shutil.Error as err:
                         logger.error(f"Move failed: {err}")
-            else:
-                # If they are not identical, that suggests a conflict or partial move scenario
-                logger.warning(
-                    f"Potentially conflicting move for '{file_name}'. "
-                    "Files differ or one doesn't exist."
-                )
+                else:
+                    log_follow_up(
+                        f"You chose NOT to move '{file_name}' from '{outdated_sharepoint}' "
+                        f"path '/{outdated_rel_path}' to '/{latest_rel_path}' to match '{latest_sharepoint}'.\n"
+                        f"Please manually check:\n"
+                        f" - Outdated file path: {source_path}\n"
+                        f" - Destination path: {destination_path}\n"
+                    )
+            
 
     # Handle updated files
     if to_be_updated:
@@ -478,6 +523,13 @@ def sync(profile: str) -> None:
                     logger.warning("Source and destination are the same file.")
                 except Exception as exc:
                     logger.exception(f"Unexpected error during file copy: {exc}")
+            else:
+                log_follow_up(
+                    f"You chose NOT to copy '{rel_path}' from {latest_sharepoint} to {outdated_sharepoint}.\n"
+                    f"Please manually check:\n"
+                    f" - Latest file: {latest_file_abs}\n"
+                    f" - Outdated file: {outdated_file_abs}\n"
+                )
 
 @cli.command()
 @click.argument("dir_name", required=True)
