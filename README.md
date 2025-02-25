@@ -5,11 +5,11 @@
 ## 🌟 Overview
 **SharePoint Sync CLI** is a command-line tool for synchronizing files between two SharePoints (e.g., **KIS** and **Client SharePoints**). It provides powerful features such as:
 
-✅ Excluding specific files or directories
-✅ Detecting moved or updated files
-✅ Displaying diffs for **Word documents** (`.docx`)
-✅ Interactive copy/move operations
-✅ Managing **multiple profiles** for different SharePoints
+- Excluding specific files or directories
+- Detecting moved or updated files
+- Displaying diffs for **Word documents** (`.docx`)
+- Interactive copy/move operations
+- Managing **multiple profiles** for different SharePoints
 
 ---
 
